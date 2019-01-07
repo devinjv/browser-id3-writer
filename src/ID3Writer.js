@@ -171,13 +171,13 @@ export default class ID3Writer {
                 break;
             }
             case 'TKEY': { // musical key in which the sound starts
-                if (!/^([A-G][#b]?m?|o)$/.test(frameValue)) {
-                    //specs: The ground keys are represented with "A","B","C","D","E",
-                    //"F" and "G" and halfkeys represented with "b" and "#". Minor is
-                    //represented as "m", e.g. "Dbm". Off key is represented with an
-                    //"o" only.
-                    throw new Error(`${frameName} frame value should be like Dbm, C#, B or o`);
-                }
+                // if (!/^([A-G][#b]?m?|o)$/.test(frameValue)) {
+                //     //specs: The ground keys are represented with "A","B","C","D","E",
+                //     //"F" and "G" and halfkeys represented with "b" and "#". Minor is
+                //     //represented as "m", e.g. "Dbm". Off key is represented with an
+                //     //"o" only.
+                //     throw new Error(`${frameName} frame value should be like Dbm, C#, B or o`);
+                // }
                 this._setStringFrame(frameName, frameValue);
                 break;
             }
