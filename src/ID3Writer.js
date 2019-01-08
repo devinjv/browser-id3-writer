@@ -113,9 +113,6 @@ export default class ID3Writer {
 
     setFrame(frameName, frameValue) {
         switch (frameName) {
-            // ref: http://id3.org/id3v2.4.0-frames
-            case 'TIT1': // content group description
-            case 'TLAN': // language
             case 'TPE1': // song artists
             case 'TCOM': // song composers
             case 'TCON': { // song genres
@@ -128,6 +125,8 @@ export default class ID3Writer {
                 this._setStringFrame(frameName, value);
                 break;
             }
+            case 'TIT1': // content group description
+            case 'TLAN': // language
             case 'TIT2': // song title
             case 'TALB': // album title
             case 'TPE2': // album artist // spec doesn't say anything about separator, so it is a string, not array
