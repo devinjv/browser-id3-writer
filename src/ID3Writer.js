@@ -113,6 +113,9 @@ export default class ID3Writer {
 
     setFrame(frameName, frameValue) {
         switch (frameName) {
+            // ref: http://id3.org/id3v2.4.0-frames
+            case 'TIT1': // content group description
+            case 'TLAN': // language
             case 'TPE1': // song artists
             case 'TCOM': // song composers
             case 'TCON': { // song genres
@@ -272,6 +275,8 @@ export default class ID3Writer {
                     offset += writeBytes.length;
                     break;
                 }
+                case 'TIT1':
+                case 'TLAN':
                 case 'TPE1':
                 case 'TCOM':
                 case 'TCON':
