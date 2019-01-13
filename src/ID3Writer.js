@@ -68,11 +68,11 @@ export default class ID3Writer {
         this.frames.push({
             name: 'GEOB',
             value: data,
-            type,
-            mimeType,
-            useUnicodeEncoding,
-            filename: filename,
             description: descriptionString,
+            filename: filename,
+            type: type,
+            mimeType: mimeType,
+            useUnicodeEncoding: useUnicodeEncoding,
             size: getGEOBFrameSize(data.byteLength, descriptionString.length, filename.length, mimeType.length, useUnicodeEncoding),
         });
     }
@@ -189,13 +189,6 @@ export default class ID3Writer {
                 break;
             }
             case 'GEOB': { // general encapsulated object
-                if (typeof frameValue !== 'object' || !('data' in frameValue) || !('description' in frameValue) || !('filename' in frameValue) || !('type' in frameValue)) {
-                    throw new Error('GEOB frame value should be an object with keys data, description, filename and type');
-                }
-                if (!frameValue.type.startsWith('application/json')) {
-                    throw new Error('Incorrect GEOB frame type');
-                }
-                this._setGEOBFrame(frameValue.data, frameValue.description, frameValue.filename, frameValue.type, !!frameValue.useUnicodeEncoding);
                 break;
             }
             case 'TXXX': { // user defined text information
@@ -404,39 +397,6 @@ export default class ID3Writer {
                     break;
                 }
                 case 'GEOB': {
-                    writeBytes = [frame.useUnicodeEncoding ? 1 : 0]; // encoding
-                    bufferWriter.set(writeBytes, offset);
-                    offset += writeBytes.length;
-
-                    writeBytes = encodeWindows1252(frame.mimeType); // MIME type
-                    bufferWriter.set(writeBytes, offset);
-                    offset += writeBytes.length;
-
-                    writeBytes = [0, frame.type]; // separator, type
-                    bufferWriter.set(writeBytes, offset);
-                    offset += writeBytes.length;
-
-                    // todo: store description & filename
-                    // if (frame.useUnicodeEncoding) {
-                    //     writeBytes = [].concat(BOM); // BOM
-                    //     bufferWriter.set(writeBytes, offset);
-                    //     offset += writeBytes.length;
-                    //
-                    //     writeBytes = encodeUtf16le(frame.description); // description
-                    //     bufferWriter.set(writeBytes, offset);
-                    //     offset += writeBytes.length;
-                    //
-                    //     offset += 2; // separator
-                    // } else {
-                    //     writeBytes = encodeWindows1252(frame.description); // description
-                    //     bufferWriter.set(writeBytes, offset);
-                    //     offset += writeBytes.length;
-                    //
-                    //     offset++; // separator
-                    // }
-
-                    bufferWriter.set(new Uint8Array(frame.value), offset); // GEOB content
-                    offset += frame.value.byteLength;
                     break;
                 }
             }
