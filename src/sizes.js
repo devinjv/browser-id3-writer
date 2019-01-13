@@ -57,6 +57,25 @@ export function getPictureFrameSize(pictureSize, mimeTypeSize, descriptionSize, 
         pictureSize;
 }
 
+export function getGEOBFrameSize(geobSize, descriptionSize, filenameSize, mimeTypeSize, useUnicodeEncoding) {
+    const headerSize = 10;
+    const encodingSize = 1;
+    const separatorSize = 1;
+    const pictureTypeSize = 1;
+    const bomSize = 2;
+    const encodedDescriptionSize = useUnicodeEncoding ?
+        bomSize + (descriptionSize + separatorSize) * 2 :
+        descriptionSize + separatorSize;
+
+    return headerSize +
+        encodingSize +
+        mimeTypeSize +
+        separatorSize +
+        pictureTypeSize +
+        encodedDescriptionSize +
+        geobSize;
+}
+
 export function getCommentFrameSize(descriptionSize, textSize) {
     const headerSize = 10;
     const encodingSize = 1;
