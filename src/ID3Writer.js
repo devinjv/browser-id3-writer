@@ -40,7 +40,7 @@ export default class ID3Writer {
         const descriptionString = description.toString();
 
         if (!mimeType) {
-            throw new Error('Unknown picture MIME type');
+            throw new Error('Unknown APIC MIME type');
         }
         if (!description) {
             useUnicodeEncoding = false;
@@ -56,8 +56,8 @@ export default class ID3Writer {
         });
     }
 
-    _setGEOBFrame(data, description, filename, type, useUnicodeEncoding) {
-        const mimeType = 'application/json';
+    _setGEOBFrame(data, description, filename, useUnicodeEncoding) {
+        const mimeType = getMimeType(new Uint8Array(data));
         const descriptionString = description.toString();
 
         if (!mimeType) {
@@ -71,9 +71,8 @@ export default class ID3Writer {
             value: data,
             description: descriptionString,
             filename: filename,
-            type: type,
-            mimeType: mimeType,
-            useUnicodeEncoding: useUnicodeEncoding,
+            type: mimeType,
+            useUnicodeEncoding,
             size: getGEOBFrameSize(data.byteLength, descriptionString.length, filename.length, mimeType.length, useUnicodeEncoding),
         });
     }
