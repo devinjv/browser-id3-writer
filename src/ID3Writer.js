@@ -48,8 +48,8 @@ export default class ID3Writer {
         this.frames.push({
             name: 'APIC',
             value: data,
-            pictureType,
-            mimeType,
+            type: pictureType,
+            format: mimeType,
             useUnicodeEncoding,
             description: descriptionString,
             size: getPictureFrameSize(data.byteLength, mimeType.length, descriptionString.length, useUnicodeEncoding),
@@ -199,7 +199,7 @@ export default class ID3Writer {
                 if (frameValue.type < 0 || frameValue.type > 20) {
                     throw new Error('Incorrect APIC frame picture type');
                 }
-                this._setPictureFrame(frameValue.type, frameValue.data, frameValue.description, !!frameValue.useUnicodeEncoding);
+                this._setPictureFrame(frameValue.type, frameValue.data, frameValue.description, frameValue.useUnicodeEncoding);
                 break;
             }
             case 'GEOB': { // general encapsulated object
@@ -388,11 +388,11 @@ export default class ID3Writer {
                     bufferWriter.set(writeBytes, offset);
                     offset += writeBytes.length;
 
-                    writeBytes = encodeWindows1252(frame.mimeType); // MIME type
+                    writeBytes = encodeWindows1252(frame.format); // MIME type
                     bufferWriter.set(writeBytes, offset);
                     offset += writeBytes.length;
 
-                    writeBytes = [0, frame.pictureType]; // separator, pic type
+                    writeBytes = [0, frame.type]; // separator, pic type (category / description)
                     bufferWriter.set(writeBytes, offset);
                     offset += writeBytes.length;
 
