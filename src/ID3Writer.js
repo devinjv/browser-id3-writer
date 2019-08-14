@@ -231,8 +231,8 @@ export default class ID3Writer {
                 break;
             }
             case 'PRIV': { // Private frame
-                if (typeof frameValue !== 'object' || !('id' in frameValue) || !('data' in frameValue)) {
-                    throw new Error('PRIV frame value should be an object with keys id and data');
+                if (typeof frameValue !== 'object' || !('owner_identifier' in frameValue || 'id' in frameValue) || !('data' in frameValue)) {
+                    throw new Error('PRIV frame value should be an object with keys (owner_identifier || id) and data');
                 }
                 this._setPrivateFrame(frameValue.id, frameValue.data);
                 break;
