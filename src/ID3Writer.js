@@ -9,6 +9,7 @@ import {
     getLyricsFrameSize,
     getCommentFrameSize,
     getUserStringFrameSize,
+    getUserUrlLinkFrameSize,
     getUrlLinkFrameSize,
     getPrivateFrameSize
 } from './sizes';
@@ -124,6 +125,18 @@ export default class ID3Writer {
         });
     }
 
+    _setUserUrlLinkFrame(description, url) {
+        const descriptionString = description.toString();
+        const urlString = url.toString();
+
+        this.frames.push({
+            name: 'WXXX',
+            description: descriptionString,
+            url: urlString,
+            size: getUserUrlLinkFrameSize(descriptionString.length, urlString.length),
+        });
+    }
+
     _setUrlLinkFrame(name, url) {
         const urlString = url.toString();
 
@@ -210,6 +223,13 @@ export default class ID3Writer {
                     throw new Error('TXXX frame value should be an object with keys description and value');
                 }
                 this._setUserStringFrame(frameValue.description, frameValue.value);
+                break;
+            }
+            case 'WXXX': { // user defined text information
+                if (typeof frameValue !== 'object' || !('description' in frameValue) || !('url' in frameValue)) {
+                    throw new Error('WXXX frame value should be an object with keys description and url');
+                }
+                this._setUserUrlLinkFrame(frameValue.description, frameValue.url);
                 break;
             }
             case 'WCOM': // Commercial information
@@ -338,6 +358,7 @@ export default class ID3Writer {
                     offset += writeBytes.length;
                     break;
                 }
+                case 'WXXX':
                 case 'TXXX':
                 case 'USLT':
                 case 'COMM': {
@@ -357,7 +378,11 @@ export default class ID3Writer {
                     bufferWriter.set(writeBytes, offset);
                     offset += writeBytes.length;
 
-                    writeBytes = encodeUtf16le(frame.value); // frame value
+                    if (frame.name === 'WXXX') {
+                        writeBytes = encodeUtf16le(frame.url); // frame url
+                    } else {
+                        writeBytes = encodeUtf16le(frame.value); // frame value
+                    }
                     bufferWriter.set(writeBytes, offset);
                     offset += writeBytes.length;
                     break;

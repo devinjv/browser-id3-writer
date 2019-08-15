@@ -126,6 +126,23 @@ export function getUserStringFrameSize(descriptionSize, valueSize) {
         valueUtf16Size;
 }
 
+export function getUserUrlLinkFrameSize(descriptionSize, urlSize) {
+    const headerSize = 10;
+    const encodingSize = 1;
+    const bomSize = 2;
+    const descriptionUtf16Size = descriptionSize * 2;
+    const separatorSize = 2;
+    const urlUtf16Size = urlSize * 2;
+
+    return headerSize +
+        encodingSize +
+        bomSize +
+        descriptionUtf16Size +
+        separatorSize +
+        bomSize +
+        urlUtf16Size;
+}
+
 export function getUrlLinkFrameSize(urlSize) {
     const headerSize = 10;
 
