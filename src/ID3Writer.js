@@ -173,7 +173,8 @@ export default class ID3Writer {
             case 'TCOP': // copyright
             case 'TKEY': // musical key in which the sound starts
             case 'TEXT': // lyricist / text writer
-            case 'TSRC': { // isrc
+            case 'TSRC': // isrc
+            case 'TENC': { // encoded by
                 this._setStringFrame(frameName, frameValue);
                 break;
             }
@@ -326,7 +327,8 @@ export default class ID3Writer {
                 case 'TPUB':
                 case 'TCOP':
                 case 'TEXT':
-                case 'TSRC': {
+                case 'TSRC':
+                case 'TENC': {
                     writeBytes = [1].concat(BOM); // encoding, BOM
                     bufferWriter.set(writeBytes, offset);
                     offset += writeBytes.length;
@@ -391,7 +393,7 @@ export default class ID3Writer {
                     bufferWriter.set(writeBytes, offset);
                     offset += writeBytes.length;
 
-                    writeBytes = [0, frame.type]; // separator, pic type (category / description)
+                    writeBytes = [0, frame.type] // separator, pic type
                     bufferWriter.set(writeBytes, offset);
                     offset += writeBytes.length;
 
