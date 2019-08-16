@@ -48,7 +48,7 @@ export default class ID3Writer {
         }
         this.frames.push({
             name: 'APIC',
-            value: data,
+            data: data,
             type: pictureType,
             format: mimeType,
             useUnicodeEncoding,
@@ -58,18 +58,19 @@ export default class ID3Writer {
     }
 
     _setGEOBFrame(data, description, filename, useUnicodeEncoding) {
-        const mimeType = getMimeType(new Uint8Array(data));
+        // const mimeType = getMimeType(new Uint8Array(data));
+        const mimeType = 'application/json';
         const descriptionString = description.toString();
 
         if (!mimeType) {
             throw new Error('Unknown GEOB MIME type');
         }
-        if (!description) {
+        if (!description && !filename) {
             useUnicodeEncoding = false;
         }
         this.frames.push({
             name: 'GEOB',
-            value: data,
+            data: data,
             description: descriptionString,
             filename: filename,
             type: mimeType,
@@ -219,10 +220,10 @@ export default class ID3Writer {
                 break;
             }
             case 'TXXX': { // user defined text information
-                if (typeof frameValue !== 'object' || !('description' in frameValue) || !('value' in frameValue)) {
-                    throw new Error('TXXX frame value should be an object with keys description and value');
+                if (typeof frameValue !== 'object' || !('information' in frameValue) || !('value' in frameValue)) {
+                    throw new Error('TXXX frame value should be an object with keys information and value');
                 }
-                this._setUserStringFrame(frameValue.description, frameValue.value);
+                this._setUserStringFrame(frameValue.information, frameValue.value);
                 break;
             }
             case 'WXXX': { // user defined text information
@@ -358,10 +359,16 @@ export default class ID3Writer {
                     offset += writeBytes.length;
                     break;
                 }
-                case 'WXXX':
-                case 'TXXX':
-                case 'USLT':
-                case 'COMM': {
+                case 'WXXX': {  // description / url
+                	// todo
+                	break;
+                }
+                case 'TXXX':  // information / value
+                case 'USLT':  // description / lyrics
+                case 'COMM': {  // description / text
+                    let frame_first = frame.description || frame.information || '';
+                    let frame_second = frame.value || frame.lyrics || frame.text || frame.url || '';
+
                     writeBytes = [1]; // encoding
                     if (frame.name === 'USLT' || frame.name === 'COMM') {
                         writeBytes = writeBytes.concat(langEng); // language
@@ -370,7 +377,7 @@ export default class ID3Writer {
                     bufferWriter.set(writeBytes, offset);
                     offset += writeBytes.length;
 
-                    writeBytes = encodeUtf16le(frame.description); // content descriptor
+                    writeBytes = encodeUtf16le(frame_first); // frame value
                     bufferWriter.set(writeBytes, offset);
                     offset += writeBytes.length;
 
@@ -378,11 +385,8 @@ export default class ID3Writer {
                     bufferWriter.set(writeBytes, offset);
                     offset += writeBytes.length;
 
-                    if (frame.name === 'WXXX') {
-                        writeBytes = encodeUtf16le(frame.url); // frame url
-                    } else {
-                        writeBytes = encodeUtf16le(frame.value); // frame value
-                    }
+                    writeBytes = encodeUtf16le(frame_second); // frame value
+
                     bufferWriter.set(writeBytes, offset);
                     offset += writeBytes.length;
                     break;
@@ -440,11 +444,12 @@ export default class ID3Writer {
                         offset++; // separator
                     }
 
-                    bufferWriter.set(new Uint8Array(frame.value), offset); // picture content
-                    offset += frame.value.byteLength;
+                    bufferWriter.set(new Uint8Array(frame.data), offset); // picture data
+                    offset += frame.data.byteLength;
                     break;
                 }
                 case 'GEOB': {
+                	// todo
                     break;
                 }
             }

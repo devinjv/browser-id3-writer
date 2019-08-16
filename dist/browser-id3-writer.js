@@ -1,1 +1,742 @@
-!function(e,t){"object"==typeof exports&&"undefined"!=typeof module?module.exports=t():"function"==typeof define&&define.amd?define(t):(e=e||self).ID3Writer=t()}(this,function(){"use strict";function r(e){return String(e).split("").map(function(e){return e.charCodeAt(0)})}function c(e){return new Uint8Array(r(e))}function o(e){var t=new Uint8Array(2*e.length);return new Uint16Array(t.buffer).set(r(e)),t}function s(e){if(!e||!e.length)return null;if(255===e[0]&&216===e[1]&&255===e[2])return"image/jpeg";if(137===e[0]&&80===e[1]&&78===e[2]&&71===e[3])return"image/png";if(71===e[0]&&73===e[1]&&70===e[2])return"image/gif";if(87===e[8]&&69===e[9]&&66===e[10]&&80===e[11])return"image/webp";var t=73===e[0]&&73===e[1]&&42===e[2]&&0===e[3],r=77===e[0]&&77===e[1]&&0===e[2]&&42===e[3];return t||r?"image/tiff":66===e[0]&&77===e[1]?"image/bmp":0===e[0]&&0===e[1]&&1===e[2]&&0===e[3]?"image/x-icon":null}return function(){var e=t.prototype;function t(e){if(!(e&&"object"==typeof e&&"byteLength"in e))throw new Error("First argument should be an instance of ArrayBuffer or Buffer");this.arrayBuffer=e,this.padding=4096,this.frames=[],this.url=""}return e._setIntegerFrame=function(e,t){var r=parseInt(t,10);this.frames.push({name:e,value:r,size:function(e){return 11+e}(r.toString().length)})},e._setStringFrame=function(e,t){var r=t.toString();this.frames.push({name:e,value:r,size:function(e){return 13+2*e}(r.length)})},e._setPictureFrame=function(e,t,r,n){var a=s(new Uint8Array(t)),i=r.toString();if(!a)throw new Error("Unknown APIC MIME type");r||(n=!1),this.frames.push({name:"APIC",value:t,type:e,format:a,useUnicodeEncoding:n,description:i,size:function(e,t,r,n){return 11+t+1+1+(n?2+2*(r+1):r+1)+e}(t.byteLength,a.length,i.length,n)})},e._setGEOBFrame=function(e,t,r,n){var a=s(new Uint8Array(e)),i=t.toString();if(!a)throw new Error("Unknown GEOB MIME type");t||(n=!1),this.frames.push({name:"GEOB",value:e,description:i,filename:r,type:a,useUnicodeEncoding:n,size:function(e,t,r,n,a){return 11+n+1+1+(a?2+2*(t+1):t+1)+(a?2+2*(r+1):r+1)+e}(e.byteLength,i.length,r.length,a.length,n)})},e._setLyricsFrame=function(e,t){var r=e.toString(),n=t.toString();this.frames.push({name:"USLT",value:n,description:r,size:function(e,t){return 16+2*e+2+2+2*t}(r.length,n.length)})},e._setCommentFrame=function(e,t){var r=e.toString(),n=t.toString();this.frames.push({name:"COMM",value:n,description:r,size:function(e,t){return 16+2*e+2+2+2*t}(r.length,n.length)})},e._setPrivateFrame=function(e,t){var r=e.toString();this.frames.push({name:"PRIV",value:t,id:r,size:function(e,t){return 10+e+1+t}(r.length,t.byteLength)})},e._setUserStringFrame=function(e,t){var r=e.toString(),n=t.toString();this.frames.push({name:"TXXX",description:r,value:n,size:function(e,t){return 13+2*e+2+2+2*t}(r.length,n.length)})},e._setUserUrlLinkFrame=function(e,t){var r=e.toString(),n=t.toString();this.frames.push({name:"WXXX",description:r,url:n,size:function(e,t){return 13+2*e+2+2+2*t}(r.length,n.length)})},e._setUrlLinkFrame=function(e,t){var r=t.toString();this.frames.push({name:e,value:r,size:function(e){return 10+e}(r.length)})},e.setFrame=function(e,t){switch(e){case"TPE1":case"TCOM":case"TCON":if(!Array.isArray(t))throw new Error(e+" frame value should be an array of strings");var r="TCON"===e?";":"/",n=t.join(r);this._setStringFrame(e,n);break;case"TIT1":case"TLAN":case"TIT2":case"TALB":case"TPE2":case"TPE3":case"TPE4":case"TRCK":case"TPOS":case"TMED":case"TPUB":case"TCOP":case"TKEY":case"TEXT":case"TSRC":case"TENC":this._setStringFrame(e,t);break;case"TBPM":case"TLEN":case"TDAT":case"TYER":this._setIntegerFrame(e,t);break;case"USLT":if(!("object"==typeof t&&"description"in t&&"lyrics"in t))throw new Error("USLT frame value should be an object with keys description and lyrics");this._setLyricsFrame(t.description,t.lyrics);break;case"APIC":if(!("object"==typeof t&&"type"in t&&"data"in t&&"description"in t))throw new Error("APIC frame value should be an object with keys type, data and description");if(t.type<0||20<t.type)throw new Error("Incorrect APIC frame picture type");this._setPictureFrame(t.type,t.data,t.description,t.useUnicodeEncoding);break;case"GEOB":break;case"TXXX":if(!("object"==typeof t&&"description"in t&&"value"in t))throw new Error("TXXX frame value should be an object with keys description and value");this._setUserStringFrame(t.description,t.value);break;case"WXXX":if(!("object"==typeof t&&"description"in t&&"url"in t))throw new Error("WXXX frame value should be an object with keys description and url");this._setUserUrlLinkFrame(t.description,t.url);break;case"WCOM":case"WCOP":case"WOAF":case"WOAR":case"WOAS":case"WORS":case"WPAY":case"WPUB":this._setUrlLinkFrame(e,t);break;case"COMM":if(!("object"==typeof t&&"description"in t&&"text"in t))throw new Error("COMM frame value should be an object with keys description and text");this._setCommentFrame(t.description,t.text);break;case"PRIV":if(!("object"==typeof t&&("owner_identifier"in t||"id"in t)&&"data"in t))throw new Error("PRIV frame value should be an object with keys (owner_identifier || id) and data");this._setPrivateFrame(t.owner_identifier||t.id,t.data);break;default:throw new Error("Unsupported frame "+e)}return this},e.removeTag=function(){if(!(this.arrayBuffer.byteLength<10)){var e=new Uint8Array(this.arrayBuffer),t=e[3],r=function(e){return(e[0]<<21)+(e[1]<<14)+(e[2]<<7)+e[3]}([e[6],e[7],e[8],e[9]])+10;!function(e){return 73===e[0]&&68===e[1]&&51===e[2]}(e)||t<2||4<t||(this.arrayBuffer=new Uint8Array(e.subarray(r)).buffer)}},e.addTag=function(){this.removeTag();var t=[255,254],r=[101,110,103],e=10+this.frames.reduce(function(e,t){return e+t.size},0)+this.padding,n=new ArrayBuffer(this.arrayBuffer.byteLength+e),a=new Uint8Array(n),i=0,s=[];return s=[73,68,51,3],a.set(s,i),i+=s.length,i++,i++,s=function(e){var t=127;return[e>>>21&t,e>>>14&t,e>>>7&t,e&t]}(e-10),a.set(s,i),i+=s.length,this.frames.forEach(function(e){switch(s=c(e.name),a.set(s,i),i+=s.length,s=function(e){var t=255;return[e>>>24&t,e>>>16&t,e>>>8&t,e&t]}(e.size-10),a.set(s,i),i+=s.length,i+=2,e.name){case"WCOM":case"WCOP":case"WOAF":case"WOAR":case"WOAS":case"WORS":case"WPAY":case"WPUB":s=c(e.value),a.set(s,i),i+=s.length;break;case"TIT1":case"TLAN":case"TPE1":case"TCOM":case"TCON":case"TIT2":case"TALB":case"TPE2":case"TPE3":case"TPE4":case"TRCK":case"TPOS":case"TKEY":case"TMED":case"TPUB":case"TCOP":case"TEXT":case"TSRC":case"TENC":s=[1].concat(t),a.set(s,i),i+=s.length,s=o(e.value),a.set(s,i),i+=s.length;break;case"WXXX":case"TXXX":case"USLT":case"COMM":s=[1],"USLT"!==e.name&&"COMM"!==e.name||(s=s.concat(r)),s=s.concat(t),a.set(s,i),i+=s.length,s=o(e.description),a.set(s,i),i+=s.length,s=[0,0].concat(t),a.set(s,i),i+=s.length,s="WXXX"===e.name?o(e.url):o(e.value),a.set(s,i),i+=s.length;break;case"TBPM":case"TLEN":case"TDAT":case"TYER":i++,s=c(e.value),a.set(s,i),i+=s.length;break;case"PRIV":s=c(e.id),a.set(s,i),i+=s.length,i++,a.set(new Uint8Array(e.value),i),i+=e.value.byteLength;break;case"APIC":s=[e.useUnicodeEncoding?1:0],a.set(s,i),i+=s.length,s=c(e.format),a.set(s,i),i+=s.length,s=[0,e.type],a.set(s,i),i+=s.length,e.useUnicodeEncoding?(s=[].concat(t),a.set(s,i),i+=s.length,s=o(e.description),a.set(s,i),i+=s.length,i+=2):(s=c(e.description),a.set(s,i),i+=s.length,i++),a.set(new Uint8Array(e.value),i),i+=e.value.byteLength}}),i+=this.padding,a.set(new Uint8Array(this.arrayBuffer),i),this.arrayBuffer=n},e.getBlob=function(){return new Blob([this.arrayBuffer],{type:"audio/mpeg"})},e.getURL=function(){return this.url||(this.url=URL.createObjectURL(this.getBlob())),this.url},e.revokeURL=function(){URL.revokeObjectURL(this.url)},t}()});
+(function (global, factory) {
+  typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+  typeof define === 'function' && define.amd ? define(factory) :
+  (global = global || self, global.ID3Writer = factory());
+}(this, function () { 'use strict';
+
+  // https://encoding.spec.whatwg.org/
+  function strToCodePoints(str) {
+    return String(str).split('').map(function (c) {
+      return c.charCodeAt(0);
+    });
+  }
+
+  function encodeWindows1252(str) {
+    return new Uint8Array(strToCodePoints(str));
+  }
+
+  function encodeUtf16le(str) {
+    var output = new Uint8Array(str.length * 2);
+    new Uint16Array(output.buffer).set(strToCodePoints(str));
+    return output;
+  }
+
+  function isId3v2(buf) {
+    return buf[0] === 0x49 && buf[1] === 0x44 && buf[2] === 0x33;
+  }
+
+  function getMimeType(buf) {
+    // https://github.com/sindresorhus/file-type
+    if (!buf || !buf.length) {
+      return null;
+    }
+
+    if (buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) {
+      return 'image/jpeg';
+    }
+
+    if (buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47) {
+      return 'image/png';
+    }
+
+    if (buf[0] === 0x47 && buf[1] === 0x49 && buf[2] === 0x46) {
+      return 'image/gif';
+    }
+
+    if (buf[8] === 0x57 && buf[9] === 0x45 && buf[10] === 0x42 && buf[11] === 0x50) {
+      return 'image/webp';
+    }
+
+    var isLeTiff = buf[0] === 0x49 && buf[1] === 0x49 && buf[2] === 0x2a && buf[3] === 0;
+    var isBeTiff = buf[0] === 0x4d && buf[1] === 0x4d && buf[2] === 0 && buf[3] === 0x2a;
+
+    if (isLeTiff || isBeTiff) {
+      return 'image/tiff';
+    }
+
+    if (buf[0] === 0x42 && buf[1] === 0x4d) {
+      return 'image/bmp';
+    }
+
+    if (buf[0] === 0 && buf[1] === 0 && buf[2] === 1 && buf[3] === 0) {
+      return 'image/x-icon';
+    }
+
+    return null;
+  }
+
+  function uint32ToUint8Array(uint32) {
+    var eightBitMask = 0xff;
+    return [uint32 >>> 24 & eightBitMask, uint32 >>> 16 & eightBitMask, uint32 >>> 8 & eightBitMask, uint32 & eightBitMask];
+  }
+
+  function uint28ToUint7Array(uint28) {
+    var sevenBitMask = 0x7f;
+    return [uint28 >>> 21 & sevenBitMask, uint28 >>> 14 & sevenBitMask, uint28 >>> 7 & sevenBitMask, uint28 & sevenBitMask];
+  }
+
+  function uint7ArrayToUint28(uint7Array) {
+    return (uint7Array[0] << 21) + (uint7Array[1] << 14) + (uint7Array[2] << 7) + uint7Array[3];
+  }
+
+  function getNumericFrameSize(frameSize) {
+    var headerSize = 10;
+    var encodingSize = 1;
+    return headerSize + encodingSize + frameSize;
+  }
+
+  function getStringFrameSize(frameSize) {
+    var headerSize = 10;
+    var encodingSize = 1;
+    var bomSize = 2;
+    var frameUtf16Size = frameSize * 2;
+    return headerSize + encodingSize + bomSize + frameUtf16Size;
+  }
+
+  function getLyricsFrameSize(descriptionSize, lyricsSize) {
+    var headerSize = 10;
+    var encodingSize = 1;
+    var languageSize = 3;
+    var bomSize = 2;
+    var descriptionUtf16Size = descriptionSize * 2;
+    var separatorSize = 2;
+    var lyricsUtf16Size = lyricsSize * 2;
+    return headerSize + encodingSize + languageSize + bomSize + descriptionUtf16Size + separatorSize + bomSize + lyricsUtf16Size;
+  }
+
+  function getPictureFrameSize(pictureSize, mimeTypeSize, descriptionSize, useUnicodeEncoding) {
+    var headerSize = 10;
+    var encodingSize = 1;
+    var separatorSize = 1;
+    var pictureTypeSize = 1;
+    var bomSize = 2;
+    var encodedDescriptionSize = useUnicodeEncoding ? bomSize + (descriptionSize + separatorSize) * 2 : descriptionSize + separatorSize;
+    return headerSize + encodingSize + mimeTypeSize + separatorSize + pictureTypeSize + encodedDescriptionSize + pictureSize;
+  }
+
+  function getGEOBFrameSize(geobSize, descriptionSize, filenameSize, mimeTypeSize, useUnicodeEncoding) {
+    var headerSize = 10;
+    var encodingSize = 1;
+    var separatorSize = 1;
+    var geobTypeSize = 1;
+    var bomSize = 2;
+    var encodedDescriptionSize = useUnicodeEncoding ? bomSize + (descriptionSize + separatorSize) * 2 : descriptionSize + separatorSize;
+    var encodedFilenameSize = useUnicodeEncoding ? bomSize + (filenameSize + separatorSize) * 2 : filenameSize + separatorSize;
+    return headerSize + encodingSize + mimeTypeSize + separatorSize + geobTypeSize + encodedDescriptionSize + encodedFilenameSize + geobSize;
+  }
+
+  function getCommentFrameSize(descriptionSize, textSize) {
+    var headerSize = 10;
+    var encodingSize = 1;
+    var languageSize = 3;
+    var bomSize = 2;
+    var descriptionUtf16Size = descriptionSize * 2;
+    var separatorSize = 2;
+    var textUtf16Size = textSize * 2;
+    return headerSize + encodingSize + languageSize + bomSize + descriptionUtf16Size + separatorSize + bomSize + textUtf16Size;
+  }
+
+  function getPrivateFrameSize(idSize, dataSize) {
+    var headerSize = 10;
+    var separatorSize = 1;
+    return headerSize + idSize + separatorSize + dataSize;
+  }
+
+  function getUserStringFrameSize(descriptionSize, valueSize) {
+    var headerSize = 10;
+    var encodingSize = 1;
+    var bomSize = 2;
+    var separatorSize = 2;
+    var descriptionUtf16Size = descriptionSize * 2;
+    var valueUtf16Size = valueSize * 2;
+    return headerSize + encodingSize + bomSize + descriptionUtf16Size + separatorSize + bomSize + valueUtf16Size;
+  }
+
+  function getUserUrlLinkFrameSize(descriptionSize, urlSize) {
+    var headerSize = 10;
+    var encodingSize = 1;
+    var bomSize = 2;
+    var separatorSize = 2;
+    var descriptionUtf16Size = descriptionSize * 2;
+    var urlUtf16Size = urlSize * 2;
+    return headerSize + encodingSize + bomSize + descriptionUtf16Size + separatorSize + bomSize + urlUtf16Size;
+  }
+
+  function getUrlLinkFrameSize(urlSize) {
+    var headerSize = 10;
+    return headerSize + urlSize;
+  }
+
+  var ID3Writer =
+  /*#__PURE__*/
+  function () {
+    var _proto = ID3Writer.prototype;
+
+    _proto._setIntegerFrame = function _setIntegerFrame(name, value) {
+      var integer = parseInt(value, 10);
+      this.frames.push({
+        name: name,
+        value: integer,
+        size: getNumericFrameSize(integer.toString().length)
+      });
+    };
+
+    _proto._setStringFrame = function _setStringFrame(name, value) {
+      var stringValue = value.toString();
+      this.frames.push({
+        name: name,
+        value: stringValue,
+        size: getStringFrameSize(stringValue.length)
+      });
+    };
+
+    _proto._setPictureFrame = function _setPictureFrame(pictureType, data, description, useUnicodeEncoding) {
+      var mimeType = getMimeType(new Uint8Array(data));
+      var descriptionString = description.toString();
+
+      if (!mimeType) {
+        throw new Error('Unknown APIC MIME type');
+      }
+
+      if (!description) {
+        useUnicodeEncoding = false;
+      }
+
+      this.frames.push({
+        name: 'APIC',
+        data: data,
+        type: pictureType,
+        format: mimeType,
+        useUnicodeEncoding: useUnicodeEncoding,
+        description: descriptionString,
+        size: getPictureFrameSize(data.byteLength, mimeType.length, descriptionString.length, useUnicodeEncoding)
+      });
+    };
+
+    _proto._setGEOBFrame = function _setGEOBFrame(data, description, filename, useUnicodeEncoding) {
+      // const mimeType = getMimeType(new Uint8Array(data));
+      var mimeType = 'application/json';
+      var descriptionString = description.toString();
+
+      if (!description && !filename) {
+        useUnicodeEncoding = false;
+      }
+
+      this.frames.push({
+        name: 'GEOB',
+        data: data,
+        description: descriptionString,
+        filename: filename,
+        type: mimeType,
+        useUnicodeEncoding: useUnicodeEncoding,
+        size: getGEOBFrameSize(data.byteLength, descriptionString.length, filename.length, mimeType.length, useUnicodeEncoding)
+      });
+    };
+
+    _proto._setLyricsFrame = function _setLyricsFrame(description, lyrics) {
+      var descriptionString = description.toString();
+      var lyricsString = lyrics.toString();
+      this.frames.push({
+        name: 'USLT',
+        value: lyricsString,
+        description: descriptionString,
+        size: getLyricsFrameSize(descriptionString.length, lyricsString.length)
+      });
+    };
+
+    _proto._setCommentFrame = function _setCommentFrame(description, text) {
+      var descriptionString = description.toString();
+      var textString = text.toString();
+      this.frames.push({
+        name: 'COMM',
+        value: textString,
+        description: descriptionString,
+        size: getCommentFrameSize(descriptionString.length, textString.length)
+      });
+    };
+
+    _proto._setPrivateFrame = function _setPrivateFrame(id, data) {
+      var identifier = id.toString();
+      this.frames.push({
+        name: 'PRIV',
+        value: data,
+        id: identifier,
+        size: getPrivateFrameSize(identifier.length, data.byteLength)
+      });
+    };
+
+    _proto._setUserStringFrame = function _setUserStringFrame(description, value) {
+      var descriptionString = description.toString();
+      var valueString = value.toString();
+      this.frames.push({
+        name: 'TXXX',
+        description: descriptionString,
+        value: valueString,
+        size: getUserStringFrameSize(descriptionString.length, valueString.length)
+      });
+    };
+
+    _proto._setUserUrlLinkFrame = function _setUserUrlLinkFrame(description, url) {
+      var descriptionString = description.toString();
+      var urlString = url.toString();
+      this.frames.push({
+        name: 'WXXX',
+        description: descriptionString,
+        url: urlString,
+        size: getUserUrlLinkFrameSize(descriptionString.length, urlString.length)
+      });
+    };
+
+    _proto._setUrlLinkFrame = function _setUrlLinkFrame(name, url) {
+      var urlString = url.toString();
+      this.frames.push({
+        name: name,
+        value: urlString,
+        size: getUrlLinkFrameSize(urlString.length)
+      });
+    };
+
+    function ID3Writer(buffer) {
+      if (!buffer || typeof buffer !== 'object' || !('byteLength' in buffer)) {
+        throw new Error('First argument should be an instance of ArrayBuffer or Buffer');
+      }
+
+      this.arrayBuffer = buffer;
+      this.padding = 4096;
+      this.frames = [];
+      this.url = '';
+    }
+
+    _proto.setFrame = function setFrame(frameName, frameValue) {
+      switch (frameName) {
+        case 'TPE1': // song artists
+
+        case 'TCOM': // song composers
+
+        case 'TCON':
+          {
+            // song genres
+            if (!Array.isArray(frameValue)) {
+              throw new Error(frameName + " frame value should be an array of strings");
+            }
+
+            var delemiter = frameName === 'TCON' ? ';' : '/';
+            var value = frameValue.join(delemiter);
+
+            this._setStringFrame(frameName, value);
+
+            break;
+          }
+
+        case 'TIT1': // content group description
+
+        case 'TLAN': // language
+
+        case 'TIT2': // song title
+
+        case 'TALB': // album title
+
+        case 'TPE2': // album artist // spec doesn't say anything about separator, so it is a string, not array
+
+        case 'TPE3': // conductor/performer refinement
+
+        case 'TPE4': // interpreted, remixed, or otherwise modified by
+
+        case 'TRCK': // song number in album: 5 or 5/10
+
+        case 'TPOS': // album disc number: 1 or 1/3
+
+        case 'TMED': // media type
+
+        case 'TPUB': // label name
+
+        case 'TCOP': // copyright
+
+        case 'TKEY': // musical key in which the sound starts
+
+        case 'TEXT': // lyricist / text writer
+
+        case 'TSRC': // isrc
+
+        case 'TENC':
+          {
+            // encoded by
+            this._setStringFrame(frameName, frameValue);
+
+            break;
+          }
+
+        case 'TBPM': // beats per minute
+
+        case 'TLEN': // song duration
+
+        case 'TDAT': // album release date expressed as DDMM
+
+        case 'TYER':
+          {
+            // album release year
+            this._setIntegerFrame(frameName, frameValue);
+
+            break;
+          }
+
+        case 'USLT':
+          {
+            // unsychronised lyrics
+            if (typeof frameValue !== 'object' || !('description' in frameValue) || !('lyrics' in frameValue)) {
+              throw new Error('USLT frame value should be an object with keys description and lyrics');
+            }
+
+            this._setLyricsFrame(frameValue.description, frameValue.lyrics);
+
+            break;
+          }
+
+        case 'APIC':
+          {
+            // song cover
+            if (typeof frameValue !== 'object' || !('type' in frameValue) || !('data' in frameValue) || !('description' in frameValue)) {
+              throw new Error('APIC frame value should be an object with keys type, data and description');
+            }
+
+            if (frameValue.type < 0 || frameValue.type > 20) {
+              throw new Error('Incorrect APIC frame picture type');
+            }
+
+            this._setPictureFrame(frameValue.type, frameValue.data, frameValue.description, frameValue.useUnicodeEncoding);
+
+            break;
+          }
+
+        case 'GEOB':
+          {
+            // general encapsulated object
+            break;
+          }
+
+        case 'TXXX':
+          {
+            // user defined text information
+            if (typeof frameValue !== 'object' || !('information' in frameValue) || !('value' in frameValue)) {
+              throw new Error('TXXX frame value should be an object with keys information and value');
+            }
+
+            this._setUserStringFrame(frameValue.information, frameValue.value);
+
+            break;
+          }
+
+        case 'WXXX':
+          {
+            // user defined text information
+            if (typeof frameValue !== 'object' || !('description' in frameValue) || !('url' in frameValue)) {
+              throw new Error('WXXX frame value should be an object with keys description and url');
+            }
+
+            this._setUserUrlLinkFrame(frameValue.description, frameValue.url);
+
+            break;
+          }
+
+        case 'WCOM': // Commercial information
+
+        case 'WCOP': // Copyright/Legal information
+
+        case 'WOAF': // Official audio file webpage
+
+        case 'WOAR': // Official artist/performer webpage
+
+        case 'WOAS': // Official audio source webpage
+
+        case 'WORS': // Official internet radio station homepage
+
+        case 'WPAY': // Payment
+
+        case 'WPUB':
+          {
+            // Publishers official webpage
+            this._setUrlLinkFrame(frameName, frameValue);
+
+            break;
+          }
+
+        case 'COMM':
+          {
+            // Comments
+            if (typeof frameValue !== 'object' || !('description' in frameValue) || !('text' in frameValue)) {
+              throw new Error('COMM frame value should be an object with keys description and text');
+            }
+
+            this._setCommentFrame(frameValue.description, frameValue.text);
+
+            break;
+          }
+
+        case 'PRIV':
+          {
+            // Private frame
+            if (typeof frameValue !== 'object' || !('owner_identifier' in frameValue || 'id' in frameValue) || !('data' in frameValue)) {
+              throw new Error('PRIV frame value should be an object with keys (owner_identifier || id) and data');
+            }
+
+            this._setPrivateFrame(frameValue.owner_identifier || frameValue.id, frameValue.data);
+
+            break;
+          }
+
+        default:
+          {
+            throw new Error("Unsupported frame " + frameName);
+          }
+      }
+
+      return this;
+    };
+
+    _proto.removeTag = function removeTag() {
+      var headerLength = 10;
+
+      if (this.arrayBuffer.byteLength < headerLength) {
+        return;
+      }
+
+      var bytes = new Uint8Array(this.arrayBuffer);
+      var version = bytes[3];
+      var tagSize = uint7ArrayToUint28([bytes[6], bytes[7], bytes[8], bytes[9]]) + headerLength;
+
+      if (!isId3v2(bytes) || version < 2 || version > 4) {
+        return;
+      }
+
+      this.arrayBuffer = new Uint8Array(bytes.subarray(tagSize)).buffer;
+    };
+
+    _proto.addTag = function addTag() {
+      this.removeTag();
+      var BOM = [0xff, 0xfe];
+      var langEng = [0x65, 0x6e, 0x67];
+      var headerSize = 10;
+      var totalFrameSize = this.frames.reduce(function (sum, frame) {
+        return sum + frame.size;
+      }, 0);
+      var totalTagSize = headerSize + totalFrameSize + this.padding;
+      var buffer = new ArrayBuffer(this.arrayBuffer.byteLength + totalTagSize);
+      var bufferWriter = new Uint8Array(buffer);
+      var offset = 0;
+      var writeBytes = [];
+      writeBytes = [0x49, 0x44, 0x33, 3]; // ID3 tag and version
+
+      bufferWriter.set(writeBytes, offset);
+      offset += writeBytes.length;
+      offset++; // version revision
+
+      offset++; // flags
+
+      writeBytes = uint28ToUint7Array(totalTagSize - headerSize); // tag size (without header)
+
+      bufferWriter.set(writeBytes, offset);
+      offset += writeBytes.length;
+      this.frames.forEach(function (frame) {
+        writeBytes = encodeWindows1252(frame.name); // frame name
+
+        bufferWriter.set(writeBytes, offset);
+        offset += writeBytes.length;
+        writeBytes = uint32ToUint8Array(frame.size - headerSize); // frame size (without header)
+
+        bufferWriter.set(writeBytes, offset);
+        offset += writeBytes.length;
+        offset += 2; // flags
+
+        switch (frame.name) {
+          case 'WCOM':
+          case 'WCOP':
+          case 'WOAF':
+          case 'WOAR':
+          case 'WOAS':
+          case 'WORS':
+          case 'WPAY':
+          case 'WPUB':
+            {
+              writeBytes = encodeWindows1252(frame.value); // URL
+
+              bufferWriter.set(writeBytes, offset);
+              offset += writeBytes.length;
+              break;
+            }
+
+          case 'TIT1':
+          case 'TLAN':
+          case 'TPE1':
+          case 'TCOM':
+          case 'TCON':
+          case 'TIT2':
+          case 'TALB':
+          case 'TPE2':
+          case 'TPE3':
+          case 'TPE4':
+          case 'TRCK':
+          case 'TPOS':
+          case 'TKEY':
+          case 'TMED':
+          case 'TPUB':
+          case 'TCOP':
+          case 'TEXT':
+          case 'TSRC':
+          case 'TENC':
+            {
+              writeBytes = [1].concat(BOM); // encoding, BOM
+
+              bufferWriter.set(writeBytes, offset);
+              offset += writeBytes.length;
+              writeBytes = encodeUtf16le(frame.value); // frame value
+
+              bufferWriter.set(writeBytes, offset);
+              offset += writeBytes.length;
+              break;
+            }
+
+          case 'WXXX':
+            {
+              // description / url
+              // todo
+              break;
+            }
+
+          case 'TXXX': // information / value
+
+          case 'USLT': // description / lyrics
+
+          case 'COMM':
+            {
+              // description / text
+              var frame_first = frame.description || frame.information || '';
+              var frame_second = frame.value || frame.lyrics || frame.text || frame.url || '';
+              writeBytes = [1]; // encoding
+
+              if (frame.name === 'USLT' || frame.name === 'COMM') {
+                writeBytes = writeBytes.concat(langEng); // language
+              }
+
+              writeBytes = writeBytes.concat(BOM); // BOM for content descriptor
+
+              bufferWriter.set(writeBytes, offset);
+              offset += writeBytes.length;
+              writeBytes = encodeUtf16le(frame_first); // frame value
+
+              bufferWriter.set(writeBytes, offset);
+              offset += writeBytes.length;
+              writeBytes = [0, 0].concat(BOM); // separator, BOM for frame value
+
+              bufferWriter.set(writeBytes, offset);
+              offset += writeBytes.length;
+              writeBytes = encodeUtf16le(frame_second); // frame value
+
+              bufferWriter.set(writeBytes, offset);
+              offset += writeBytes.length;
+              break;
+            }
+
+          case 'TBPM':
+          case 'TLEN':
+          case 'TDAT':
+          case 'TYER':
+            {
+              offset++; // encoding
+
+              writeBytes = encodeWindows1252(frame.value); // frame value
+
+              bufferWriter.set(writeBytes, offset);
+              offset += writeBytes.length;
+              break;
+            }
+
+          case 'PRIV':
+            {
+              writeBytes = encodeWindows1252(frame.id); // identifier
+
+              bufferWriter.set(writeBytes, offset);
+              offset += writeBytes.length;
+              offset++; // separator
+
+              bufferWriter.set(new Uint8Array(frame.value), offset); // frame data
+
+              offset += frame.value.byteLength;
+              break;
+            }
+
+          case 'APIC':
+            {
+              writeBytes = [frame.useUnicodeEncoding ? 1 : 0]; // encoding
+
+              bufferWriter.set(writeBytes, offset);
+              offset += writeBytes.length;
+              writeBytes = encodeWindows1252(frame.format); // MIME type
+
+              bufferWriter.set(writeBytes, offset);
+              offset += writeBytes.length;
+              writeBytes = [0, frame.type]; // separator, pic type
+
+              bufferWriter.set(writeBytes, offset);
+              offset += writeBytes.length;
+
+              if (frame.useUnicodeEncoding) {
+                writeBytes = [].concat(BOM); // BOM
+
+                bufferWriter.set(writeBytes, offset);
+                offset += writeBytes.length;
+                writeBytes = encodeUtf16le(frame.description); // description
+
+                bufferWriter.set(writeBytes, offset);
+                offset += writeBytes.length;
+                offset += 2; // separator
+              } else {
+                writeBytes = encodeWindows1252(frame.description); // description
+
+                bufferWriter.set(writeBytes, offset);
+                offset += writeBytes.length;
+                offset++; // separator
+              }
+
+              bufferWriter.set(new Uint8Array(frame.data), offset); // picture data
+
+              offset += frame.data.byteLength;
+              break;
+            }
+
+          case 'GEOB':
+            {
+              break;
+            }
+        }
+      });
+      offset += this.padding; // free space for rewriting
+
+      bufferWriter.set(new Uint8Array(this.arrayBuffer), offset);
+      this.arrayBuffer = buffer;
+      return buffer;
+    };
+
+    _proto.getBlob = function getBlob() {
+      return new Blob([this.arrayBuffer], {
+        type: 'audio/mpeg'
+      });
+    };
+
+    _proto.getURL = function getURL() {
+      if (!this.url) {
+        this.url = URL.createObjectURL(this.getBlob());
+      }
+
+      return this.url;
+    };
+
+    _proto.revokeURL = function revokeURL() {
+      URL.revokeObjectURL(this.url);
+    };
+
+    return ID3Writer;
+  }();
+
+  return ID3Writer;
+
+}));
